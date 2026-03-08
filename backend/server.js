@@ -107,7 +107,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
-// app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
 // app.use('/api/weddings', require('./routes/weddingRoutes'));
 // app.use('/api/menu', require('./routes/menuRoutes'));
 // app.use('/api/orders', require('./routes/orderRoutes'));
