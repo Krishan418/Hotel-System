@@ -103,10 +103,9 @@ if (process.env.NODE_ENV === 'development') {
 //   - Any request starting with /api/auth goes to authRoutes
 //   - Inside authRoutes, POST '/login' becomes POST '/api/auth/login'
 //
-// We will uncomment each route as we build that module.
-// For now, they are commented out because the route files don't exist yet.
+// Uncomment each route as you build that module.
 
-// app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
 // app.use('/api/rooms', require('./routes/roomRoutes'));
 // app.use('/api/bookings', require('./routes/bookingRoutes'));
 // app.use('/api/weddings', require('./routes/weddingRoutes'));
@@ -115,7 +114,7 @@ if (process.env.NODE_ENV === 'development') {
 // app.use('/api/pool', require('./routes/poolRoutes'));
 // app.use('/api/payments', require('./routes/paymentRoutes'));
 // app.use('/api/deliveries', require('./routes/deliveryRoutes'));
-// app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // ========== STEP 5b: Base API Routes ==========
 //
