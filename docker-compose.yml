@@ -1,55 +1,144 @@
 # ============================================
-# docker-compose.yml — Run Everything Together
+# docker-compose.yml — Run the Full MERN Stack
 # ============================================
-# This file lets you start MongoDB, the backend, and the
-# frontend all with ONE command: docker-compose up
 #
-# What each service does:
-#   mongo    → Runs the MongoDB database
-#   backend  → Runs the Node.js/Express API server
-#   frontend → Runs the React development server
+# WHAT IS DOCKER COMPOSE?
+#   A tool to define and run MULTIPLE containers together.
+#   Instead of starting MongoDB, the backend, and the frontend
+#   in 3 separate terminals, you run ONE command:
+#
+#     docker-compose up
+#
+# HOW IT WORKS:
+#   1. Docker reads this file
+#   2. It starts 3 containers (services): mongo, backend, frontend
+#   3. They can find each other by SERVICE NAME (e.g., "backend", "mongo")
+#      because Docker puts them on the same private network
+#
+# SERVICE STARTUP ORDER:
+#   mongo → backend → frontend
+#   (healthchecks make sure each service is READY before the next starts)
+#
+# PORTS (host:container):
+#   MongoDB  → localhost:27017
+#   Backend  → localhost:5000
+#   Frontend → localhost:5173
 
 version: '3.8'
 
 services:
-  # ---------- MongoDB Database ----------
+
+  # ══════════════════════════════════════════
+  # 1. MONGODB DATABASE
+  # ══════════════════════════════════════════
+  # We use the official MongoDB image from Docker Hub.
+  # No Dockerfile needed — we just use the pre-built image.
   mongo:
-    image: mongo:7           # Official MongoDB image
+    image: mongo:7
     container_name: hotel_mongo
     ports:
-      - "27017:27017"        # Expose MongoDB on port 27017
+      - "27017:27017"       # Expose so you can browse DB with MongoDB Compass
     volumes:
-      - mongo-data:/data/db  # Persist data even if container restarts
+      - mongo-data:/data/db # Named volume: data persists when container stops
+    # Healthcheck: pings MongoDB every 5 seconds to check it's ready.
+    # Backend won't start until this passes.
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-  # ---------- Backend API Server ----------
+  # ══════════════════════════════════════════
+  # 2. BACKEND — Node.js + Express API
+  # ══════════════════════════════════════════
+  # Built from ./backend/Dockerfile
   backend:
-    build: ./backend          # Build from backend/Dockerfile
+    build:
+      context: ./backend      # Dockerfile is in the backend/ folder
+      dockerfile: Dockerfile
     container_name: hotel_backend
     ports:
-      - "5000:5000"           # Expose API on port 5000
+      - "5000:5000"
     environment:
+      # PORT: which port Express listens on
       - PORT=5000
+      # NODE_ENV: 'production' mode (no extra debug logging)
+      - NODE_ENV=production
+      # MONGO_URI: use "mongo" (the service name above) instead of "localhost"
+      # Docker's internal network routes "mongo" to the MongoDB container
       - MONGO_URI=mongodb://mongo:27017/hotel_management
-      - JWT_SECRET=hotel_system_docker_secret_key_2026
+      # JWT settings
+      - JWT_SECRET=hotel_system_docker_secret_key_2026_change_in_production
       - JWT_EXPIRE=7d
+      # CORS: which URL is allowed to call the API
+      - CLIENT_URL=http://localhost:5173
     depends_on:
-      - mongo                 # Wait for MongoDB to start first
+      mongo:
+        condition: service_healthy  # Wait until MongoDB healthcheck passes
     volumes:
-      - ./backend:/app        # Sync code changes (hot reload)
-      - /app/node_modules     # Don't sync node_modules
+      # Bind mount: edits to backend/ are reflected inside the container
+      # (useful for development)
+      - ./backend:/app
+      # This line is CRITICAL: it prevents our container's /app/node_modules
+      # from being overwritten by the (empty) host ./backend/node_modules
+      - /app/node_modules
+    restart: unless-stopped    # Restart automatically if it crashes
 
-  # ---------- Frontend React App ----------
+  # ══════════════════════════════════════════
+  # 3. FRONTEND — React + Vite
+  # ══════════════════════════════════════════
+  # Built from ./frontend/Dockerfile
   frontend:
-    build: ./frontend         # Build from frontend/Dockerfile
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: hotel_frontend
     ports:
-      - "5173:5173"           # Expose React dev server on port 5173
+      - "5173:5173"
+    environment:
+      # Tells Vite the API proxy target (must match backend service name)
+      - VITE_API_URL=http://backend:5000
     depends_on:
-      - backend               # Wait for backend to start first
+      - backend               # Start after the backend is up
     volumes:
-      - ./frontend:/app       # Sync code changes (hot reload)
-      - /app/node_modules     # Don't sync node_modules
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
 
-# Named volume to persist MongoDB data
+# ══════════════════════════════════════════
+# NAMED VOLUMES
+# ══════════════════════════════════════════
+# "mongo-data" is a Docker-managed volume.
+# Unlike bind mounts (./folder:/path), named volumes:
+#   - Persist data even if you remove containers
+#   - Are managed by Docker (stored in Docker's area, not your project folder)
+#   - Are portable across different machines
 volumes:
   mongo-data:
+
+# ══════════════════════════════════════════
+# COMMON COMMANDS (run from the project root)
+# ══════════════════════════════════════════
+#
+# Start everything:
+#   docker-compose up
+#
+# Start in background (detached mode):
+#   docker-compose up -d
+#
+# Rebuild images after code changes:
+#   docker-compose up --build
+#
+# Stop everything:
+#   docker-compose down
+#
+# Stop AND delete database data:
+#   docker-compose down -v
+#
+# View logs for a specific service:
+#   docker-compose logs backend
+#   docker-compose logs -f frontend    (follow = live stream)
+#
+# Run a command inside a container:
+#   docker-compose exec backend sh

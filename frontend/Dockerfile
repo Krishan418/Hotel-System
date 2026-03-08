@@ -1,26 +1,39 @@
 # ============================================
-# Frontend Dockerfile
+# frontend/Dockerfile
 # ============================================
-# This tells Docker how to create a container for the React app.
+#
+# This builds and serves the React + Vite app.
+#
+# TWO MODES:
+#   Development (default): `npm run dev` — fast refresh, no build step
+#   Production:            multi-stage build → nginx serves static files
+#
+# For this project we use DEVELOPMENT mode because:
+#   - You're still building and testing the app
+#   - Hot module replacement (HMR) lets you see changes instantly
+#
+# HOW TO SWITCH TO PRODUCTION:
+#   Uncomment the production section at the bottom and
+#   comment out the development section.
 
-# Use Node.js 20 (LTS)
+# ── Node.js 20 LTS on Alpine Linux ──
 FROM node:20-alpine
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package files first
+# Copy package files first (for layer caching)
 COPY package*.json ./
 
-# Install dependencies
+# Install all dependencies (including dev tools like vite)
 RUN npm install
 
-# Copy the rest of the code
+# Copy the rest of the source code
 COPY . .
 
-# Expose Vite dev server port
+# Vite's dev server listens on port 5173
 EXPOSE 5173
 
-# Start the development server
-# --host flag makes it accessible outside the container
-CMD ["npm", "run", "dev", "--", "--host"]
+# Start Vite dev server
+# --host 0.0.0.0 → makes it accessible from outside the container
+# Without --host, Docker can't forward traffic to Vite
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
