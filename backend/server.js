@@ -109,12 +109,13 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/weddings', require('./routes/weddingRoutes'));
-// app.use('/api/menu', require('./routes/menuRoutes'));
-// app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/menu', require('./routes/menuRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 // app.use('/api/pool', require('./routes/poolRoutes'));
 // app.use('/api/payments', require('./routes/paymentRoutes'));
 // app.use('/api/deliveries', require('./routes/deliveryRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/inventory', require('./routes/inventoryRoutes'));
 
 // ========== STEP 5b: Base API Routes ==========
 //
