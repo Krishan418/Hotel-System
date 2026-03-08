@@ -1,0 +1,55 @@
+# ============================================
+# docker-compose.yml — Run Everything Together
+# ============================================
+# This file lets you start MongoDB, the backend, and the
+# frontend all with ONE command: docker-compose up
+#
+# What each service does:
+#   mongo    → Runs the MongoDB database
+#   backend  → Runs the Node.js/Express API server
+#   frontend → Runs the React development server
+
+version: '3.8'
+
+services:
+  # ---------- MongoDB Database ----------
+  mongo:
+    image: mongo:7           # Official MongoDB image
+    container_name: hotel_mongo
+    ports:
+      - "27017:27017"        # Expose MongoDB on port 27017
+    volumes:
+      - mongo-data:/data/db  # Persist data even if container restarts
+
+  # ---------- Backend API Server ----------
+  backend:
+    build: ./backend          # Build from backend/Dockerfile
+    container_name: hotel_backend
+    ports:
+      - "5000:5000"           # Expose API on port 5000
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/hotel_management
+      - JWT_SECRET=hotel_system_docker_secret_key_2026
+      - JWT_EXPIRE=7d
+    depends_on:
+      - mongo                 # Wait for MongoDB to start first
+    volumes:
+      - ./backend:/app        # Sync code changes (hot reload)
+      - /app/node_modules     # Don't sync node_modules
+
+  # ---------- Frontend React App ----------
+  frontend:
+    build: ./frontend         # Build from frontend/Dockerfile
+    container_name: hotel_frontend
+    ports:
+      - "5173:5173"           # Expose React dev server on port 5173
+    depends_on:
+      - backend               # Wait for backend to start first
+    volumes:
+      - ./frontend:/app       # Sync code changes (hot reload)
+      - /app/node_modules     # Don't sync node_modules
+
+# Named volume to persist MongoDB data
+volumes:
+  mongo-data:
