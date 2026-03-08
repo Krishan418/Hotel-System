@@ -1,43 +1,58 @@
 /**
- * ProtectedRoute.jsx
+ * ProtectedRoute.jsx (Enhanced)
  *
- * Guards dashboard routes so only logged-in users with the correct role
- * can access them. If not logged in → redirect to /login.
- * If wrong role → redirect to their own dashboard.
+ * Changes from v1:
+ *   1. Waits for `authLoading` to finish before making any decisions.
+ *      Previously it might redirect to /login before token verification completed.
+ *   2. Shows a full-screen spinner while the token is being verified.
+ *   3. Wrong-role access now goes to /unauthorized instead of silently
+ *      redirecting to their dashboard (clearer error message for the user).
  *
- * Usage in App.jsx:
- *   <ProtectedRoute allowedRoles={['admin']}>
- *     <AdminDashboard />
- *   </ProtectedRoute>
+ * HOW THE LOADING FLOW WORKS:
+ *   App loads → authLoading = true (verifying JWT)
+ *     → Show spinner (don't redirect yet!)
+ *     → Verification done → authLoading = false
+ *       ├── No user  → <Navigate to="/login" />
+ *       ├── Wrong role → <Navigate to="/unauthorized" />
+ *       └── Correct role → render children ✅
  */
 
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Map each role to its home dashboard
-const ROLE_REDIRECTS = {
-  admin: '/admin',
-  staff: '/staff',
-  cashier: '/cashier',
+// Which dashboard each role should be sent to if they try to access a wrong route
+const ROLE_HOME = {
+  admin:    '/admin',
+  staff:    '/staff',
+  cashier:  '/cashier',
   delivery: '/delivery',
   customer: '/customer',
 };
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { user } = useAuth();
+  const { user, authLoading } = useAuth();
 
-  // Not logged in → go to login page
+  // ── Step 1: Wait while we verify the token ──
+  if (authLoading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  // ── Step 2: Not logged in → go to login ──
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Logged in but wrong role → send to their dashboard
+  // ── Step 3: Wrong role → go to their own dashboard ──
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    const redirect = ROLE_REDIRECTS[user.role] || '/';
-    return <Navigate to={redirect} replace />;
+    const home = ROLE_HOME[user.role] || '/';
+    return <Navigate to={home} replace />;
   }
 
-  // All good — render the page
+  // ── Step 4: All checks passed → render the page ──
   return children;
 }
 
