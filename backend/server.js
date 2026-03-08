@@ -106,7 +106,7 @@ if (process.env.NODE_ENV === 'development') {
 // Uncomment each route as you build that module.
 
 app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/rooms', require('./routes/roomRoutes'));
+app.use('/api/rooms', require('./routes/roomRoutes'));
 // app.use('/api/bookings', require('./routes/bookingRoutes'));
 // app.use('/api/weddings', require('./routes/weddingRoutes'));
 // app.use('/api/menu', require('./routes/menuRoutes'));
