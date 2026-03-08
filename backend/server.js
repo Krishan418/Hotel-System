@@ -105,34 +105,27 @@ if (process.env.NODE_ENV === 'development') {
 //
 // Uncomment each route as you build that module.
 
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/rooms', require('./routes/roomRoutes'));
-app.use('/api/bookings', require('./routes/bookingRoutes'));
-app.use('/api/weddings', require('./routes/weddingRoutes'));
-app.use('/api/menu', require('./routes/menuRoutes'));
-app.use('/api/orders', require('./routes/orderRoutes'));
-// app.use('/api/pool', require('./routes/poolRoutes'));
-// app.use('/api/payments', require('./routes/paymentRoutes'));
-// app.use('/api/deliveries', require('./routes/deliveryRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/auth',      require('./routes/authRoutes'));
+app.use('/api/rooms',     require('./routes/roomRoutes'));
+app.use('/api/bookings',  require('./routes/bookingRoutes'));
+app.use('/api/weddings',  require('./routes/weddingRoutes'));
+app.use('/api/menu',      require('./routes/menuRoutes'));
+app.use('/api/orders',    require('./routes/orderRoutes'));
+app.use('/api/users',     require('./routes/userRoutes'));
 app.use('/api/inventory', require('./routes/inventoryRoutes'));
 
 // ========== STEP 5b: Base API Routes ==========
 //
 // These routes are active right now for testing.
 
-// Health Check — Quick way to test if the server is running.
-// Visit http://localhost:5000/ in your browser to see the response.
+// Health Check — used by Docker healthcheck probes and uptime monitoring
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: '🏨 Hotel API is healthy', timestamp: new Date() });
+});
+
+// Root shortcut
 app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: '🏨 Hotel Management System API is running!',
-    version: '1.0.0',
-    endpoints: {
-      health: 'GET /',
-      api: 'GET /api',
-    },
-  });
+  res.json({ success: true, message: '🏨 Hotel Management System API is running!', version: '1.0.0' });
 });
 
 // API Welcome — Lists all available API route groups.
@@ -171,16 +164,18 @@ app.get('/api', (req, res) => {
 //   OR
 //   next(error);  — passes error to this handler
 
-app.use(errorHandler);
-
-// Handle 404 — Route not found
-// This catches any request that didn't match a route above
+// ── 404 handler — must come BEFORE the error handler ──
+// Catches requests to unknown routes (not handled by any router above)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
   });
 });
+
+// ── Global error handler — must be LAST ──
+// Catches all errors thrown by route handlers and middleware
+app.use(errorHandler);
 
 // ========== STEP 7 & 8: Connect to Database & Start Server ==========
 

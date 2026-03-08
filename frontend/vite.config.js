@@ -2,24 +2,18 @@
 // vite.config.js — Vite Development Server Configuration
 // ============================================
 //
-// WHY DO WE NEED THIS FOR DOCKER?
-//   When running inside Docker, the browser talks to the frontend
-//   container at localhost:5173. But API calls go to the backend
-//   container (hotel_backend). Without a proxy, the fetch('/api/auth/login')
-//   call would hit localhost:5173/api/... — the frontend server — which
-//   doesn't know about API routes.
+// WHY DO WE NEED A PROXY?
+//   In development, React runs on port 5173 and Express on 5000.
+//   Writing fetch('http://localhost:5000/api/rooms') would work locally,
+//   but would break in Docker (where "localhost" refers to the container itself).
 //
-//   The PROXY tells Vite: "Any request starting with /api → forward
-//   it to the backend container at http://backend:5000".
+//   The proxy lets us write just: fetch('/api/rooms')
+//   Vite forwards /api/* to the backend automatically.
+//   This works in BOTH local development AND Docker.
 //
-// WHEN RUNNING LOCALLY (without Docker):
-//   The same proxy still works — just change the target to
-//   http://localhost:5000 if you run backend manually.
-//
-// HOW THE PROXY WORKS:
-//   Browser → GET /api/rooms → Vite dev server → backend:5000/api/rooms
-//   So from React's perspective, ALL calls go to the same origin.
-//   This avoids CORS issues completely!
+// HOW THE TARGET IS CHOSEN:
+//   Docker:  VITE_API_TARGET is set to 'http://backend:5000' in docker-compose.yml
+//   Local:   VITE_API_TARGET is not set → fallback 'http://localhost:5000'
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -29,26 +23,21 @@ export default defineConfig({
 
   server: {
     // ── host: true ──
-    // Makes the dev server listen on ALL network interfaces (0.0.0.0),
-    // not just localhost. Required so Docker can forward traffic to Vite.
+    // Makes the dev server listen on ALL network interfaces (0.0.0.0).
+    // Required for Docker — without it, traffic can't reach Vite from the host.
     host: true,
 
-    // Port the Vite dev server runs on
+    // Port the Vite dev server listens on
     port: 5173,
 
     // ── proxy ──
-    // Forwards /api/* requests to the backend.
-    // This lets us write fetch('/api/rooms') in React without specifying
-    // the full backend URL — Vite handles the forwarding.
+    // Any request starting with /api gets forwarded to the backend.
+    // The React code just writes fetch('/api/rooms') — Vite handles the rest.
     proxy: {
       '/api': {
-        // In Docker: 'http://backend:5000' (using docker-compose service name)
-        // Locally:   'http://localhost:5000'
-        target: 'http://backend:5000',
-
-        // changeOrigin: true → rewrites the Host header to match the target.
-        // Required for most servers to accept proxied requests.
-        changeOrigin: true,
+        // Use VITE_API_TARGET if set (Docker), otherwise localhost (local dev)
+        target: process.env.VITE_API_TARGET || 'http://localhost:5000',
+        changeOrigin: true, // Rewrites the Host header — required by most servers
       },
     },
   },

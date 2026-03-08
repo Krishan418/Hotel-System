@@ -97,8 +97,9 @@ services:
     ports:
       - "5173:5173"
     environment:
-      # Tells Vite the API proxy target (must match backend service name)
-      - VITE_API_URL=http://backend:5000
+      # Tells Vite which server to proxy /api/* requests to
+      # 'backend' is the Docker service name — Docker resolves it to the container IP
+      - VITE_API_TARGET=http://backend:5000
     depends_on:
       - backend               # Start after the backend is up
     volumes:

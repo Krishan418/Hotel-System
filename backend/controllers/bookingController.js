@@ -229,9 +229,28 @@ const createBooking = async (req, res, next) => {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
 
+    if (isNaN(checkInDate) || isNaN(checkOutDate)) {
+      res.status(400);
+      throw new Error('Invalid date format. Use YYYY-MM-DD');
+    }
+
+    // Check-in must be today or in the future
+    // FIX: this guard existed in searchAvailableRooms but was missing here
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (checkInDate < today) {
+      res.status(400);
+      throw new Error('Check-in date cannot be in the past');
+    }
+
     if (checkOutDate <= checkInDate) {
       res.status(400);
       throw new Error('Check-out date must be after check-in date');
+    }
+
+    if (Number(numberOfGuests) < 1) {
+      res.status(400);
+      throw new Error('Number of guests must be at least 1');
     }
 
     // ---------- Check room exists ----------

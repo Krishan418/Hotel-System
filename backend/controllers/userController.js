@@ -81,8 +81,34 @@ const createUser = async (req, res, next) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
+    // Validate required fields explicitly (gives clearer errors than Mongoose)
+    if (!name || !email || !password) {
+      res.status(400);
+      throw new Error('Name, email, and password are required');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400);
+      throw new Error('Please provide a valid email address');
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      res.status(400);
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    // Validate role if provided
+    const validRoles = ['customer', 'admin', 'staff', 'cashier', 'delivery'];
+    if (role && !validRoles.includes(role)) {
+      res.status(400);
+      throw new Error(`Role must be one of: ${validRoles.join(', ')}`);
+    }
+
     // Check if email already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       res.status(400);
       throw new Error('A user with this email already exists');
@@ -90,8 +116,8 @@ const createUser = async (req, res, next) => {
 
     // Admin can assign any role
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password,
       phone,
       role: role || 'customer',
@@ -112,6 +138,7 @@ const createUser = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // ============================================
 // @desc    Update user (role, active status, etc.)

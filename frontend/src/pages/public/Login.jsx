@@ -3,16 +3,34 @@
  *
  * Calls the backend POST /api/auth/login endpoint.
  * On success, saves JWT + user to AuthContext and redirects to dashboard.
+ *
+ * FIX: If user is already logged in, redirect them straight to their dashboard.
+ *      Prevents the awkward state of seeing the login page while already authenticated.
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
+// Maps each role to its dashboard URL
+const ROLE_ROUTES = {
+  admin:    '/admin',
+  staff:    '/staff',
+  cashier:  '/cashier',
+  delivery: '/delivery',
+  customer: '/customer',
+};
+
 function Login() {
-  const { login } = useAuth();
+  const { login, user, authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // ── If already logged in, redirect to their dashboard immediately ──
+  // authLoading check prevents a flash redirect while the token is being verified
+  if (!authLoading && user) {
+    return <Navigate to={ROLE_ROUTES[user.role] || '/'} replace />;
+  }
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -47,14 +65,7 @@ function Login() {
       login(data.user, data.token);
 
       // Redirect each role to their own dashboard
-      const roleRoutes = {
-        admin: '/admin',
-        staff: '/staff',
-        cashier: '/cashier',
-        delivery: '/delivery',
-        customer: '/customer',
-      };
-      navigate(roleRoutes[data.user.role] || '/');
+      navigate(ROLE_ROUTES[data.user.role] || '/');
     } catch (err) {
       setError('Network error. Please check your connection.');
     } finally {

@@ -13,14 +13,7 @@
 //     updateRoom    — Edit room details (price, amenities, etc.)
 //     deleteRoom    — Soft-delete a room (set isActive = false)
 //     changeStatus  — Change room status (available/occupied/maintenance/reserved)
-//
-// HOW FILTERING WORKS (getAllRooms):
-//   Customers can filter rooms using URL query parameters:
-//     GET /api/rooms?type=double             → only double rooms
-//     GET /api/rooms?status=available        → only available rooms
-//     GET /api/rooms?minPrice=5000&maxPrice=15000 → rooms in price range
-//     GET /api/rooms?capacity=2             → rooms fitting 2+ guests
-//   These filters are combined with AND logic.
+//     getRoomStats  — Statistics for the admin dashboard
 
 const Room = require('../models/Room');
 
@@ -31,30 +24,25 @@ const Room = require('../models/Room');
 // ============================================
 const getAllRooms = async (req, res, next) => {
   try {
-    // ---------- Build filter object ----------
-    // Start with only active rooms
     const filter = { isActive: true };
 
-    // Filter by room type (single, double, twin, suite, family)
-    if (req.query.type) {
+    // Filter by room type
+    const validTypes = ['single', 'double', 'twin', 'suite', 'family'];
+    if (req.query.type && validTypes.includes(req.query.type)) {
       filter.type = req.query.type;
     }
 
-    // Filter by status (available, occupied, maintenance, reserved)
-    if (req.query.status) {
+    // Filter by status
+    const validStatuses = ['available', 'occupied', 'maintenance', 'reserved'];
+    if (req.query.status && validStatuses.includes(req.query.status)) {
       filter.status = req.query.status;
     }
 
     // Filter by price range
-    // MongoDB uses $gte (>=) and $lte (<=) operators
     if (req.query.minPrice || req.query.maxPrice) {
       filter.price = {};
-      if (req.query.minPrice) {
-        filter.price.$gte = Number(req.query.minPrice); // greater than or equal
-      }
-      if (req.query.maxPrice) {
-        filter.price.$lte = Number(req.query.maxPrice); // less than or equal
-      }
+      if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
+      if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
     }
 
     // Filter by minimum capacity
@@ -67,15 +55,9 @@ const getAllRooms = async (req, res, next) => {
       filter.floor = Number(req.query.floor);
     }
 
-    // ---------- Execute query ----------
-    // .sort('roomNumber') orders rooms by room number (101, 102, 103...)
     const rooms = await Room.find(filter).sort('roomNumber');
 
-    res.json({
-      success: true,
-      count: rooms.length,
-      rooms,
-    });
+    res.json({ success: true, count: rooms.length, rooms });
   } catch (error) {
     next(error);
   }
@@ -95,10 +77,7 @@ const getRoomById = async (req, res, next) => {
       throw new Error('Room not found');
     }
 
-    res.json({
-      success: true,
-      room,
-    });
+    res.json({ success: true, room });
   } catch (error) {
     next(error);
   }
@@ -113,23 +92,28 @@ const createRoom = async (req, res, next) => {
   try {
     const { roomNumber, type, description, price, capacity, amenities, images, floor } = req.body;
 
+    // Validate required fields explicitly for a clear error message
+    if (!roomNumber || !type || !price || !capacity) {
+      res.status(400);
+      throw new Error('Room number, type, price, and capacity are required');
+    }
+
     // Check if room number already exists
     const existingRoom = await Room.findOne({ roomNumber });
     if (existingRoom) {
       res.status(400);
-      throw new Error(`Room number ${roomNumber} already exists`);
+      throw new Error(`Room number "${roomNumber}" already exists`);
     }
 
-    // Create the room
     const room = await Room.create({
       roomNumber,
       type,
       description,
-      price,
-      capacity,
+      price: Number(price),
+      capacity: Number(capacity),
       amenities: amenities || [],
       images: images || [],
-      floor: floor || 1,
+      floor: floor ? Number(floor) : 1,
     });
 
     res.status(201).json({
@@ -146,11 +130,14 @@ const createRoom = async (req, res, next) => {
 // @desc    Update room details
 // @route   PUT /api/rooms/:id
 // @access  Private/Admin
+//
+// BUG FIX: Previously used req.body directly, allowing any field
+// (including status, isActive) to be updated without validation.
+// Now only editable fields are whitelisted.
 // ============================================
 const updateRoom = async (req, res, next) => {
   try {
-    // Check if room exists
-    let room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id);
     if (!room) {
       res.status(404);
       throw new Error('Room not found');
@@ -161,25 +148,37 @@ const updateRoom = async (req, res, next) => {
       const duplicate = await Room.findOne({ roomNumber: req.body.roomNumber });
       if (duplicate) {
         res.status(400);
-        throw new Error(`Room number ${req.body.roomNumber} already exists`);
+        throw new Error(`Room number "${req.body.roomNumber}" already exists`);
       }
     }
 
-    // Update only the fields that were sent in the request
-    // findByIdAndUpdate replaces only the provided fields
-    room = await Room.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,            // Return the updated document
-        runValidators: true,  // Run schema validations
+    // ── Whitelist of updatable fields ──
+    // Only these fields can be changed via this endpoint.
+    // Status changes go through PUT /api/rooms/:id/status
+    // Soft-deletes go through DELETE /api/rooms/:id
+    const allowedUpdates = {};
+    const allowed = ['roomNumber', 'type', 'description', 'price', 'capacity', 'amenities', 'images', 'floor'];
+    allowed.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        allowedUpdates[field] = req.body[field];
       }
+    });
+
+    if (Object.keys(allowedUpdates).length === 0) {
+      res.status(400);
+      throw new Error('No valid fields provided for update');
+    }
+
+    const updatedRoom = await Room.findByIdAndUpdate(
+      req.params.id,
+      allowedUpdates,
+      { new: true, runValidators: true }
     );
 
     res.json({
       success: true,
-      message: `Room ${room.roomNumber} updated successfully`,
-      room,
+      message: `Room ${updatedRoom.roomNumber} updated successfully`,
+      room: updatedRoom,
     });
   } catch (error) {
     next(error);
@@ -200,9 +199,13 @@ const deleteRoom = async (req, res, next) => {
       throw new Error('Room not found');
     }
 
-    // Soft delete — set isActive to false
-    // The room data is preserved for historical bookings
-    // but it won't show up in public room listings (filtered by isActive: true)
+    // Prevent deleting a room that is currently occupied
+    if (room.status === 'occupied') {
+      res.status(400);
+      throw new Error('Cannot delete a room that is currently occupied. Check out the guest first.');
+    }
+
+    // Soft delete — preserves historical booking data
     room.isActive = false;
     await room.save();
 
@@ -219,30 +222,15 @@ const deleteRoom = async (req, res, next) => {
 // @desc    Change room status
 // @route   PUT /api/rooms/:id/status
 // @access  Private/Admin, Staff
-//
-// STATUS OPTIONS:
-//   available   → Room is ready for guests
-//   occupied    → Guest is currently staying
-//   maintenance → Room is being cleaned or repaired
-//   reserved    → Room is booked but guest hasn't arrived
-//
-// TYPICAL STATUS FLOW:
-//   available → reserved (booking made)
-//   reserved  → occupied (guest checks in)
-//   occupied  → maintenance (guest checks out, room needs cleaning)
-//   maintenance → available (cleaning done)
 // ============================================
 const changeStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
 
-    // Validate the status value
     const validStatuses = ['available', 'occupied', 'maintenance', 'reserved'];
     if (!status || !validStatuses.includes(status)) {
       res.status(400);
-      throw new Error(
-        `Invalid status. Must be one of: ${validStatuses.join(', ')}`
-      );
+      throw new Error(`Invalid status. Choose from: ${validStatuses.join(', ')}`);
     }
 
     const room = await Room.findById(req.params.id);
@@ -251,16 +239,13 @@ const changeStatus = async (req, res, next) => {
       throw new Error('Room not found');
     }
 
-    // Save the old status for the response message
     const oldStatus = room.status;
-
-    // Update the status
     room.status = status;
     await room.save();
 
     res.json({
       success: true,
-      message: `Room ${room.roomNumber} status changed: ${oldStatus} → ${status}`,
+      message: `Room ${room.roomNumber}: ${oldStatus} → ${status}`,
       room,
     });
   } catch (error) {
@@ -275,47 +260,31 @@ const changeStatus = async (req, res, next) => {
 // ============================================
 const getRoomStats = async (req, res, next) => {
   try {
-    // MongoDB aggregation pipeline — a powerful way to compute stats
-    // Think of it as SQL GROUP BY but more flexible
-    //
-    // What this does:
-    //   1. Only look at active rooms
-    //   2. Group rooms by status
-    //   3. Count how many rooms are in each status
     const statusStats = await Room.aggregate([
       { $match: { isActive: true } },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
     ]);
 
-    // Get type breakdown
     const typeStats = await Room.aggregate([
       { $match: { isActive: true } },
-      {
-        $group: {
-          _id: '$type',
-          count: { $sum: 1 },
-          avgPrice: { $avg: '$price' },
-        },
-      },
+      { $group: { _id: '$type', count: { $sum: 1 }, avgPrice: { $avg: '$price' } } },
     ]);
 
-    // Total counts
-    const totalRooms = await Room.countDocuments({ isActive: true });
+    const totalRooms     = await Room.countDocuments({ isActive: true });
     const availableRooms = await Room.countDocuments({ isActive: true, status: 'available' });
+    const occupiedRooms  = await Room.countDocuments({ isActive: true, status: 'occupied' });
 
     res.json({
       success: true,
       stats: {
-        totalRooms,
-        availableRooms,
+        total: totalRooms,
+        available: availableRooms,
+        occupied: occupiedRooms,
+        maintenance: await Room.countDocuments({ isActive: true, status: 'maintenance' }),
+        reserved: await Room.countDocuments({ isActive: true, status: 'reserved' }),
         occupancyRate: totalRooms > 0
-          ? (((totalRooms - availableRooms) / totalRooms) * 100).toFixed(1) + '%'
-          : '0%',
+          ? Number(((occupiedRooms / totalRooms) * 100).toFixed(1))
+          : 0,
         byStatus: statusStats,
         byType: typeStats,
       },

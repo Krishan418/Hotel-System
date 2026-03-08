@@ -3,14 +3,29 @@
  *
  * Calls the backend POST /api/auth/register endpoint.
  * After registration, redirects to login.
+ *
+ * FIX: If user is already logged in, redirect to their dashboard.
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
+const ROLE_ROUTES = {
+  admin: '/admin', staff: '/staff', cashier: '/cashier',
+  delivery: '/delivery', customer: '/customer',
+};
+
 function Register() {
+  const { user, authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If already logged in, skip the register page
+  if (!authLoading && user) {
+    return <Navigate to={ROLE_ROUTES[user.role] || '/'} replace />;
+  }
+
 
   const [form, setForm] = useState({
     name: '',
