@@ -17,6 +17,12 @@ function Footer() {
         <div className="footer-brand">
           <h3>🏨 LuxeHotel</h3>
           <p>Your premier destination for luxury stays, unforgettable weddings, and exquisite dining experiences.</p>
+          <div className="social-links">
+            <span>fb</span>
+            <span>ig</span>
+            <span>tw</span>
+            <span>in</span>
+          </div>
         </div>
 
         {/* Quick Links */}

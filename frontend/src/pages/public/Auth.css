@@ -2,32 +2,53 @@
 
 .auth-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+  background: linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.9)),
+              url('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop') center/cover fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
 }
 
 .auth-card {
   background: var(--white);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-2xl);
+  border-radius: 0;
+  padding: 48px 40px;
   width: 100%;
-  max-width: 440px;
-  box-shadow: var(--shadow-xl);
+  max-width: 480px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--primary);
 }
 
 .auth-logo {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: var(--spacing-md);
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--secondary);
+  margin-bottom: var(--spacing-lg);
   text-align: center;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.auth-logo .text-gold {
+  color: var(--primary);
+  font-style: italic;
 }
 
 .auth-card h2 {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   color: var(--secondary);
   text-align: center;
   margin-bottom: var(--spacing-xs);
@@ -35,23 +56,59 @@
 
 .auth-subtitle {
   text-align: center;
-  color: var(--gray-600);
-  font-size: 0.9rem;
-  margin-bottom: var(--spacing-xl);
+  color: var(--gray-500);
+  font-size: 0.95rem;
+  margin-bottom: 32px;
+  font-weight: 300;
+}
+
+.auth-card .form-group input {
+  padding: 14px 16px;
+  background: var(--surface-alt);
+  border-color: var(--gray-200);
+}
+
+.auth-card .form-group input:focus {
+  background: var(--white);
+}
+
+.auth-card .btn-primary {
+  width: 100%;
+  padding: 16px;
+  font-size: 0.95rem;
+  margin-top: 8px;
 }
 
 .auth-footer {
   text-align: center;
-  color: var(--gray-600);
-  font-size: 0.88rem;
-  margin-top: var(--spacing-md);
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-100);
 }
 
 .auth-footer a {
-  color: var(--primary);
+  color: var(--secondary);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  margin-left: 8px;
+  position: relative;
 }
 
-.auth-footer a:hover {
-  text-decoration: underline;
+.auth-footer a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--secondary);
+  transition: var(--transition-fast);
+}
+
+.auth-footer a:hover::after {
+  width: 100%;
 }
