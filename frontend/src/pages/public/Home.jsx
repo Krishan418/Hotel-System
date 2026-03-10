@@ -55,7 +55,7 @@ function Home() {
       <section className="hero">
         <div className="hero-overlay">
           <div className="container hero-content">
-            <span className="hero-tag">Welcome to LuxeHotel</span>
+            <span className="hero-tag">Welcome to Hotel Ceylon</span>
             <h1>Experience Luxury <br /><span className="text-gold">Like Never Before</span></h1>
             <p>Discover world-class rooms, unforgettable events, and exceptional dining in the heart of Colombo.</p>
             <div className="hero-buttons">
@@ -88,7 +88,7 @@ function Home() {
       <section className="section about-section">
         <div className="container about-inner">
           <div className="about-text">
-            <h2 className="section-title">Why Choose LuxeHotel?</h2>
+            <h2 className="section-title">Why Choose Hotel Ceylon?</h2>
             <p style={{ color: 'var(--gray-600)', marginBottom: '24px' }}>
               With over 20 years of hospitality excellence, we combine luxury with warmth.
             </p>
@@ -150,3 +150,4 @@ function Home() {
 }
 
 export default Home;
+

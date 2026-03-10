@@ -77,7 +77,7 @@ function Login() {
     <div className="auth-page">
       <div className="auth-card">
         {/* Logo */}
-        <div className="auth-logo">🏨 LuxeHotel</div>
+        <div className="auth-logo">🏨 Hotel Ceylon</div>
         <h2>Welcome Back</h2>
         <p className="auth-subtitle">Sign in to access your account</p>
 
@@ -132,3 +132,4 @@ function Login() {
 }
 
 export default Login;
+

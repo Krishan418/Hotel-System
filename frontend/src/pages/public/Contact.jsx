@@ -24,7 +24,7 @@ function Contact() {
   const contactInfo = [
     { icon: '📍', label: 'Address', value: '123 Luxury Avenue, Colombo 03, Sri Lanka' },
     { icon: '📞', label: 'Phone', value: '+94 11 234 5678' },
-    { icon: '✉️', label: 'Email', value: 'info@luxehotel.com' },
+    { icon: '✉️', label: 'Email', value: 'info@Hotel Ceylon.com' },
     { icon: '🕐', label: 'Hours', value: 'Reception open 24/7' },
   ];
 
@@ -151,3 +151,4 @@ function Contact() {
 }
 
 export default Contact;
+

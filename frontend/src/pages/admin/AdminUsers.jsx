@@ -93,7 +93,7 @@ function AdminUsers() {
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input type="email" required placeholder="john@luxehotel.com"
+                <input type="email" required placeholder="john@hotelceylon.com"
                   value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
               </div>
               <div className="form-group">
@@ -168,3 +168,4 @@ function AdminUsers() {
 }
 
 export default AdminUsers;
+

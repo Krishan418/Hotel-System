@@ -15,7 +15,7 @@ function Footer() {
       <div className="container footer-inner">
         {/* Brand */}
         <div className="footer-brand">
-          <h3>🏨 LuxeHotel</h3>
+          <h3>🏨 Hotel Ceylon</h3>
           <p>Your premier destination for luxury stays, unforgettable weddings, and exquisite dining experiences.</p>
           <div className="social-links">
             <span>fb</span>
@@ -53,7 +53,7 @@ function Footer() {
           <ul>
             <li>📍 123 Luxury Ave, Colombo</li>
             <li>📞 +94 11 234 5678</li>
-            <li>✉️ info@luxehotel.com</li>
+            <li>✉️ info@hotelceylon.com</li>
             <li>🕐 24/7 Open</li>
           </ul>
         </div>
@@ -61,7 +61,7 @@ function Footer() {
 
       {/* Bottom Bar */}
       <div className="footer-bottom">
-        <p>© {year} LuxeHotel. All rights reserved.</p>
+        <p>© {year} Hotel Ceylon. All rights reserved.</p>
       </div>
     </footer>
   );

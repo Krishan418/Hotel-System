@@ -40,7 +40,7 @@ function Restaurant() {
       <section className="section" style={{ background: 'var(--gray-50)' }}>
         <div className="container text-center">
           <h2 className="section-title">Dining Experiences</h2>
-          <p className="section-subtitle">Multiple ways to enjoy exceptional food at LuxeHotel.</p>
+          <p className="section-subtitle">Multiple ways to enjoy exceptional food at Hotel Ceylon.</p>
           <div className="grid-4">
             {diningOptions.map((opt) => (
               <div key={opt.title} className="card" style={{ textAlign: 'center' }}>
@@ -102,3 +102,4 @@ function Restaurant() {
 }
 
 export default Restaurant;
+

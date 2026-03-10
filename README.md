@@ -1,4 +1,4 @@
-# 🏨 LuxeHotel — Hotel & Event Management System
+# 🏨 Hotel Ceylon — Hotel & Event Management System
 
 A full-stack, production-ready **MERN** (MongoDB, Express, React, Node.js) web application for managing hotel operations. Features a premium luxury design, role-based dashboards, and complete containerization for easy deployment.
 
@@ -116,3 +116,4 @@ Hotel-System/
 
 ## 📄 License
 This project is for educational purposes.
+

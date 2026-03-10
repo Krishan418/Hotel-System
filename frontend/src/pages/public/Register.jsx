@@ -83,9 +83,9 @@ function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo">🏨 LuxeHotel</div>
+        <div className="auth-logo">🏨 Hotel Ceylon</div>
         <h2>Create Account</h2>
-        <p className="auth-subtitle">Join LuxeHotel — it's free!</p>
+        <p className="auth-subtitle">Join Hotel Ceylon — it's free!</p>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
@@ -172,3 +172,4 @@ function Register() {
 }
 
 export default Register;
+

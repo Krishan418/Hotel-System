@@ -44,6 +44,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminRooms     from './pages/admin/AdminRooms';
 import AdminUsers     from './pages/admin/AdminUsers';
 import AdminReports   from './pages/admin/AdminReports';
+import AdminWeddings  from './pages/admin/AdminWeddings';
+import AdminRestaurant from './pages/admin/AdminRestaurant';
 
 // ── Customer Dashboard Pages ──
 import CustomerDashboard  from './pages/customer/CustomerDashboard';
@@ -103,8 +105,8 @@ function App() {
           <Route path="/admin/users"      element={<Guard roles={['admin']}><AdminUsers /></Guard>} />
           <Route path="/admin/reports"    element={<Guard roles={['admin']}><AdminReports /></Guard>} />
           {/* These sub-routes reuse the main dashboard until dedicated pages are built */}
-          <Route path="/admin/weddings"   element={<Guard roles={['admin']}><AdminDashboard /></Guard>} />
-          <Route path="/admin/restaurant" element={<Guard roles={['admin']}><AdminDashboard /></Guard>} />
+          <Route path="/admin/weddings"   element={<Guard roles={['admin']}><AdminWeddings /></Guard>} />
+          <Route path="/admin/restaurant" element={<Guard roles={['admin']}><AdminRestaurant /></Guard>} />
 
           {/* ══════════════════════════════════════════
               CUSTOMER ROUTES — only role: customer

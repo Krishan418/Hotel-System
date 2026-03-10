@@ -27,7 +27,7 @@ function DashboardLayout({ title, navItems, children }) {
       {/* ── Sidebar ── */}
       <aside className="sidebar">
         {/* Logo */}
-        <div className="sidebar-logo">🏨 LuxeHotel</div>
+        <div className="sidebar-logo">🏨 Hotel Ceylon</div>
 
         {/* Role badge */}
         <div style={{ padding: '0 24px', marginBottom: '12px' }}>

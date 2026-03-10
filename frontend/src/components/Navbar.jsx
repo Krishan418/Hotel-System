@@ -38,7 +38,7 @@ function Navbar() {
       <div className="container navbar-inner">
         {/* Logo */}
         <Link to="/" className="navbar-logo">
-          🏨 LuxeHotel
+          🏨 Hotel Ceylon
         </Link>
 
         {/* Hamburger for mobile */}
@@ -84,3 +84,4 @@ function Navbar() {
 }
 
 export default Navbar;
+
